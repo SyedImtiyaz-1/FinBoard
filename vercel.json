@@ -5,7 +5,8 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build"
+        "distDir": "build",
+        "installCommand": "yarn install"
       }
     }
   ],
@@ -26,8 +27,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_FINNHUB_API_KEY": "@finnhub_api_key"
-  }
+  ]
 }

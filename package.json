@@ -8,13 +8,13 @@
     "@mui/icons-material": "^5.15.13",
     "@mui/material": "^5.15.13",
     "@types/node": "^20.12.10",
-    "@types/react": "^18.3.3",
+    "@types/react": "^18.3.1",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18.3.0",
     "axios": "^1.7.2",
-    "react": "^19.1.1",
+    "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
-    "react-dom": "^19.1.1",
+    "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "recharts": "^2.12.7",
     "typescript": "^5.4.3",
@@ -43,5 +43,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
 }
