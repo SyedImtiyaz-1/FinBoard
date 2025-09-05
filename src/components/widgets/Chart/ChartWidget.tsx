@@ -35,13 +35,14 @@ import { Widget } from '../../../stores/dashboardStore';
 import { useDashboardStore } from '../../../stores/dashboardStore';
 import { getValueFromPath } from '../../../utils/dataUtils';
 import { apiService } from '../../../services/api/apiService';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 interface ChartWidgetProps {
   widget: Widget;
 }
 
 const ChartWidget: React.FC<ChartWidgetProps> = ({ widget }) => {
-  const { removeWidget, updateWidgetData } = useDashboardStore();
+  const { removeWidget, updateWidgetData, setSelectedWidget } = useDashboardStore();
   const [isLoading, setIsLoading] = useState(false);
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
 
@@ -209,6 +210,16 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({ widget }) => {
               {widget.name}
             </Typography>
             <Chip label={chartType} size="small" color="primary" />
+            <Chip label={`${widget.refreshInterval}s`} size="small" variant="outlined" />
+            {widget.error && (
+              <Chip
+                icon={<ErrorOutlineIcon />}
+                label="Error"
+                size="small"
+                color="error"
+                variant="outlined"
+              />
+            )}
           </Box>
         }
         action={
@@ -235,7 +246,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({ widget }) => {
             <IconButton size="small" onClick={handleRefresh} disabled={isLoading}>
               <RefreshIcon />
             </IconButton>
-            <IconButton size="small">
+            <IconButton size="small" onClick={() => setSelectedWidget(widget.id)}>
               <SettingsIcon />
             </IconButton>
             <IconButton size="small" onClick={handleDelete} color="error">
@@ -251,6 +262,11 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({ widget }) => {
       )}
       
       <CardContent sx={{ flexGrow: 1, pt: 0 }}>
+        {widget.error && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="error">{widget.error}</Typography>
+          </Box>
+        )}
         {renderChart()}
         
         {widget.lastUpdated && (

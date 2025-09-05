@@ -4,20 +4,23 @@ import { DragDropContext, Droppable } from 'react-beautiful-dnd';
 import { useDashboardStore } from '../stores/dashboardStore';
 import WidgetGrid from '../components/layout/WidgetGrid';
 import AddWidgetModal from '../components/forms/AddWidgetModal';
+import WidgetSettingsModal from '../components/forms/WidgetSettingsModal';
 import DashboardHeader from '../components/layout/DashboardHeader';
 import { useWidgetData } from '../hooks/useWidgetData';
+import { DropResult } from 'react-beautiful-dnd';
 
 const Dashboard: React.FC = () => {
-  const { widgets, isAddingWidget, setAddingWidget } = useDashboardStore();
+  const { widgets, isAddingWidget, setAddingWidget, reorderWidgets } = useDashboardStore();
   
   // Initialize data fetching for all widgets
   useWidgetData();
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-    
-    // Handle widget reordering logic here
-    // This will be implemented in the WidgetGrid component
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+    if (sourceIndex === destinationIndex) return;
+    reorderWidgets(sourceIndex, destinationIndex);
   };
 
   return (
@@ -76,6 +79,7 @@ const Dashboard: React.FC = () => {
         open={isAddingWidget}
         onClose={() => setAddingWidget(false)}
       />
+      <WidgetSettingsModal />
     </Box>
   );
 };

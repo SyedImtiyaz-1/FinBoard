@@ -16,6 +16,9 @@ import {
   Paper,
   Chip,
   LinearProgress,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -26,15 +29,20 @@ import {
 import { Widget } from '../../../stores/dashboardStore';
 import { useDashboardStore } from '../../../stores/dashboardStore';
 import { apiService } from '../../../services/api/apiService';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 interface TableWidgetProps {
   widget: Widget;
 }
 
 const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
-  const { removeWidget, updateWidgetData } = useDashboardStore();
+  const { removeWidget, updateWidgetData, setSelectedWidget } = useDashboardStore();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filterKey, setFilterKey] = useState<string>('');
+  const [filterValue, setFilterValue] = useState<string>('');
 
   const handleRefresh = async () => {
     setIsLoading(true);
@@ -84,11 +92,15 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
       );
     }
 
-    return dataArray.slice(0, 10); // Limit to 10 rows
+    return dataArray;
   };
 
   const tableData = renderTableData();
   const columns = tableData.length > 0 ? Object.keys(tableData[0]) : [];
+  const filtered = !filterKey || !filterValue
+    ? tableData
+    : tableData.filter((row) => String(row[filterKey] ?? '').toLowerCase().includes(filterValue.toLowerCase()));
+  const paginated = filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Card
@@ -109,6 +121,16 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
               {widget.name}
             </Typography>
             <Chip label={`${tableData.length} items`} size="small" color="primary" />
+            <Chip label={`${widget.refreshInterval}s`} size="small" variant="outlined" />
+            {widget.error && (
+              <Chip
+                icon={<ErrorOutlineIcon />}
+                label="Error"
+                size="small"
+                color="error"
+                variant="outlined"
+              />
+            )}
           </Box>
         }
         action={
@@ -124,7 +146,7 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
             <IconButton size="small" onClick={handleRefresh} disabled={isLoading}>
               <RefreshIcon />
             </IconButton>
-            <IconButton size="small">
+            <IconButton size="small" onClick={() => setSelectedWidget(widget.id)}>
               <SettingsIcon />
             </IconButton>
             <IconButton size="small" onClick={handleDelete} color="error">
@@ -140,16 +162,39 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
       )}
       
       <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-        <Box sx={{ mb: 2 }}>
+        {widget.error && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="error">{widget.error}</Typography>
+          </Box>
+        )}
+        <Box sx={{ mb: 2, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 1fr' }, gap: 1 }}>
           <TextField
             fullWidth
             size="small"
-            placeholder="Search table..."
+            placeholder="Search anywhere..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
               startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
             }}
+          />
+          <FormControl size="small">
+            <Select
+              displayEmpty
+              value={filterKey}
+              onChange={(e) => setFilterKey(e.target.value as string)}
+            >
+              <MenuItem value=""><em>All Columns</em></MenuItem>
+              {columns.map((col) => (
+                <MenuItem key={col} value={col}>{col}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            size="small"
+            placeholder="Filter value"
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
           />
         </Box>
         
@@ -165,7 +210,7 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tableData.map((row, index) => (
+              {paginated.map((row, index) => (
                 <TableRow key={index}>
                   {columns.map((column) => (
                     <TableCell key={column}>
@@ -179,6 +224,19 @@ const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
             </TableBody>
           </Table>
         </TableContainer>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Page {page + 1} of {Math.max(1, Math.ceil(filtered.length / rowsPerPage))}
+          </Typography>
+          <Box>
+            <IconButton size="small" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+              {'<'}
+            </IconButton>
+            <IconButton size="small" disabled={(page + 1) * rowsPerPage >= filtered.length} onClick={() => setPage((p) => p + 1)}>
+              {'>'}
+            </IconButton>
+          </Box>
+        </Box>
         
         {widget.lastUpdated && (
           <Typography

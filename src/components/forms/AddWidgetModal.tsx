@@ -35,6 +35,8 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({ open, onClose }) => {
   });
   const [availableFields, setAvailableFields] = useState<string[]>([]);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  const [filterOnlyArrays, setFilterOnlyArrays] = useState(false);
+  const [search, setSearch] = useState('');
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -74,7 +76,7 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({ open, onClose }) => {
     
     addWidget({
       name: formData.name,
-      type: 'card',
+      type: formData.displayMode,
       apiUrl: formData.apiUrl,
       refreshInterval: formData.refreshInterval,
       fields: selectedFields,
@@ -165,12 +167,31 @@ const AddWidgetModal: React.FC<AddWidgetModalProps> = ({ open, onClose }) => {
           
           {availableFields.length > 0 && (
             <>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 2, alignItems: 'center' }}>
+                <TextField
+                  size="small"
+                  placeholder="Search fields..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <Box display="flex" alignItems="center" gap={1}>
+                  <input
+                    id="arrays-only"
+                    type="checkbox"
+                    checked={filterOnlyArrays}
+                    onChange={(e) => setFilterOnlyArrays(e.target.checked)}
+                  />
+                  <Typography variant="body2">Show arrays only (for table)</Typography>
+                </Box>
+              </Box>
               <Box>
                 <Typography variant="h6" gutterBottom>
                   Available Fields
                 </Typography>
                 <Box display="flex" flexWrap="wrap" gap={1}>
-                  {availableFields.map((field) => (
+                  {availableFields
+                    .filter((f) => f.toLowerCase().includes(search.toLowerCase()))
+                    .map((field) => (
                     <Chip
                       key={field}
                       label={field}

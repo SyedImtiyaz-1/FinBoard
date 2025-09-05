@@ -11,8 +11,11 @@ export interface Widget {
   displayMode: 'card' | 'table' | 'chart';
   data?: any;
   lastUpdated?: string;
+  error?: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  fieldFormats?: Record<string, 'currency' | 'percentage' | 'number' | 'string'>;
+  currencyCode?: string;
 }
 
 interface DashboardState {
@@ -27,6 +30,9 @@ interface DashboardState {
   updateWidgetData: (id: string, data: any) => void;
   updateWidgetPosition: (id: string, position: { x: number; y: number }) => void;
   updateWidgetSize: (id: string, size: { width: number; height: number }) => void;
+  setWidgetError: (id: string, error: string | null) => void;
+  reorderWidgets: (sourceIndex: number, destinationIndex: number) => void;
+  replaceAllWidgets: (widgets: Widget[]) => void;
 }
 
 export const useDashboardStore = create<DashboardState>()(
@@ -42,6 +48,7 @@ export const useDashboardStore = create<DashboardState>()(
           id: Date.now().toString(),
           data: null,
           lastUpdated: new Date().toISOString(),
+          error: undefined,
         };
         set((state) => ({
           widgets: [...state.widgets, newWidget],
@@ -75,7 +82,7 @@ export const useDashboardStore = create<DashboardState>()(
         set((state) => ({
           widgets: state.widgets.map((w) =>
             w.id === id
-              ? { ...w, data, lastUpdated: new Date().toISOString() }
+              ? { ...w, data, lastUpdated: new Date().toISOString(), error: undefined }
               : w
           ),
         }));
@@ -95,6 +102,27 @@ export const useDashboardStore = create<DashboardState>()(
             w.id === id ? { ...w, size } : w
           ),
         }));
+      },
+
+      setWidgetError: (id, error) => {
+        set((state) => ({
+          widgets: state.widgets.map((w) =>
+            w.id === id ? { ...w, error: error ?? undefined } : w
+          ),
+        }));
+      },
+
+      reorderWidgets: (sourceIndex, destinationIndex) => {
+        set((state) => {
+          const updated = [...state.widgets];
+          const [removed] = updated.splice(sourceIndex, 1);
+          updated.splice(destinationIndex, 0, removed);
+          return { widgets: updated };
+        });
+      },
+
+      replaceAllWidgets: (widgets) => {
+        set(() => ({ widgets }));
       },
     }),
     {
